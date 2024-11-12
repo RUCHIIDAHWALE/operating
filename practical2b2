@@ -1,0 +1,34 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "No numbers provided.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Print the numbers in reverse order
+    printf("Child process displaying numbers in reverse order:\n");
+    for (int i = argc - 1; i > 0; i--) {
+        printf("%s ", argv[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+// child-program//
+
+// path child program
+// args[0] = "./pract2b2";(name of child file)
+
+// gcc -o pract2b pract2b.c
+// gcc -o pract2b2 pract2b2.c
+//./pract2b.c
+
+// no og integer=5
+// enter the no.
+// 2 3 4 5 1
+
+// O/p
+// 5 4 3 2 1
