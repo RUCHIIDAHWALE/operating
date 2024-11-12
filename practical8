@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MAX_CYLINDERS 200  // Define the maximum number of cylinders
+
+// Comparator function for sorting in ascending order
+int compare(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+// Function to calculate the total seek time for SSTF
+int sstf(int *requests, int n, int start) {
+    int total_seek_time = 0;
+    int visited[n];
+    int i, j;
+
+    // Initialize visited array
+    for (i = 0; i < n; i++) {
+        visited[i] = 0;
+    }
+
+    int current_position = start;
+    int count = 0;
+
+    while (count < n) {
+        int min_distance = MAX_CYLINDERS;
+        int closest_request = -1;
+
+        // Find the closest request
+        for (i = 0; i < n; i++) {
+            if (!visited[i]) {
+                int distance = abs(current_position - requests[i]);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    closest_request = i;
+                }
+            }
+        }
+
+        // Update total seek time and move the head to the new position
+        total_seek_time += min_distance;
+        visited[closest_request] = 1;
+        current_position = requests[closest_request];
+        count++;
+    }
+
+    return total_seek_time;
+}
+
+// Function to calculate the total seek time for SCAN
+int scan(int *requests, int n, int start, int max_cylinder) {
+    int total_seek_time = 0;
+    int left[MAX_CYLINDERS], right[MAX_CYLINDERS];
+    int left_count = 0, right_count = 0;
+    int i;
+
+    // Split requests into left and right of the current position
+    for (i = 0; i < n; i++) {
+        if (requests[i] < start) {
+            left[left_count++] = requests[i];
+        } else {
+            right[right_count++] = requests[i];
+        }
+    }
+
+    // Sort the left and right requests
+    qsort(left, left_count, sizeof(int), compare);
+    qsort(right, right_count, sizeof(int), compare);
+
+    // Start moving to the rightmost end first
+    int current_position = start;
+    for (i = 0; i < right_count; i++) {
+        total_seek_time += abs(current_position - right[i]);
+        current_position = right[i];
+    }
+
+    // Now move to the leftmost end and then move to the farthest request on the left side
+    for (i = left_count - 1; i >= 0; i--) {
+        total_seek_time += abs(current_position - left[i]);
+        current_position = left[i];
+    }
+
+    return total_seek_time;
+}
+
+// Function to calculate the total seek time for C-Look
+int clook(int *requests, int n, int start, int max_cylinder) {
+    int total_seek_time = 0;
+    int left[MAX_CYLINDERS], right[MAX_CYLINDERS];
+    int left_count = 0, right_count = 0;
+    int i;
+
+    // Split requests into left and right of the current position
+    for (i = 0; i < n; i++) {
+        if (requests[i] < start) {
+            left[left_count++] = requests[i];
+        } else {
+            right[right_count++] = requests[i];
+        }
+    }
+
+    // Sort the left and right requests
+    qsort(left, left_count, sizeof(int), compare);
+    qsort(right, right_count, sizeof(int), compare);
+
+    // Start by going to the rightmost request, then jump to the leftmost request
+    int current_position = start;
+    for (i = 0; i < right_count; i++) {
+        total_seek_time += abs(current_position - right[i]);
+        current_position = right[i];
+    }
+
+    // Jump to the leftmost request
+    current_position = left[0];
+    total_seek_time += abs(current_position - right[right_count - 1]);
+
+    // Now move to the leftmost request
+    for (i = 0; i < left_count; i++) {
+        total_seek_time += abs(current_position - left[i]);
+        current_position = left[i];
+    }
+
+    return total_seek_time;
+}
+
+int main() {
+    int requests[] = {176, 79, 34, 50, 92, 11, 32};
+    int n = sizeof(requests) / sizeof(requests[0]);
+    int start = 50;  // Initial head position
+
+    // SSTF
+    int total_seek_time_sstf = sstf(requests, n, start);
+    printf("SSTF Total Seek Time: %d\n", total_seek_time_sstf);
+
+    // SCAN
+    int max_cylinder = 200;  // The maximum cylinder in this case
+    int total_seek_time_scan = scan(requests, n, start, max_cylinder);
+    printf("SCAN Total Seek Time: %d\n", total_seek_time_scan);
+
+    // C-Look
+    int total_seek_time_clook = clook(requests, n, start, max_cylinder);
+    printf("C-Look Total Seek Time: %d\n", total_seek_time_clook);
+
+    return 0;
+}
+
+
+
+
+
+
+// gcc 8.c -o 8
+// ./8
