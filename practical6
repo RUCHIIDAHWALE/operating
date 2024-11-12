@@ -171,6 +171,11 @@ int main() {
 
 
 
+
+
+//page replacement //
+//fcfs lru optimal 
+
 //gcc  pract6.c -o pract6
 //./pract6
 
