@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_SIZE 1024  // Size of the shared memory segment
+
+int main() {
+    key_t key = ftok("shmfile", 65); // Generate a unique key
+    int shmid = shmget(key, SHM_SIZE, 0666 | IPC_CREAT); // Create the shared memory segment
+    char *shared_memory = (char*) shmat(shmid, (void*)0, 0); // Attach the shared memory segment to server's address space
+
+    // Write data to the shared memory segment
+    printf("Enter a message to write to the shared memory: ");
+    fgets(shared_memory, SHM_SIZE, stdin);
+
+    // Detach from the shared memory
+    shmdt(shared_memory);
+
+    printf("Message written to shared memory.\n");
+
+    return 0;
+}
+
+
+
+
+// server
+
+//interprocess-communication using shared memory//
+//client-server program //
+
+// gcc -o pract7b1 pract7b1.c
+// gcc -o pract7b2 pract7b2.c
+//./pract7b1
+
+//Enter message= Hii
+
+//./ pravt7b2
+//o/p
