@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_PROCESSES 10
+
+// Structure to represent a process
+typedef struct {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int remaining_time;
+} Process;
+
+// Function for Shortest Job First (SJF) Preemptive
+void sjf_preemptive(Process processes[], int n) {
+    int completed = 0, current_time = 0, min_index, min_remaining_time;
+    float waiting_time = 0, turnaround_time = 0;
+    
+    while (completed < n) {
+        min_remaining_time = __INT_MAX__; // Initialize minimum remaining time
+
+        // Find the process with the minimum remaining time that has arrived
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= current_time && 
+                processes[i].remaining_time < min_remaining_time && 
+                processes[i].remaining_time > 0) {
+                min_remaining_time = processes[i].remaining_time;
+                min_index = i;
+            }
+        }
+
+        // If no process is found, just increment time
+        if (min_remaining_time == __INT_MAX__) {
+            current_time++;
+            continue;
+        }
+
+        // Execute the selected process
+        processes[min_index].remaining_time--;
+        current_time++;
+
+        
+
+        // If the process is completed
+        if (processes[min_index].remaining_time == 0) {
+            completed++;
+            int finish_time = current_time;
+            int burst_time = processes[min_index].burst_time;
+
+            waiting_time += finish_time - burst_time - processes[min_index].arrival_time;
+            turnaround_time += finish_time - processes[min_index].arrival_time;
+        }
+    }
+
+    printf("SJF (Preemptive) Results:\n");
+    printf("Average Waiting Time: %.2f\n", waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", turnaround_time / n);
+}
+
+// Function for Round Robin
+void round_robin(Process processes[], int n, int quantum) {
+    int remaining_time[MAX_PROCESSES];
+    int completed = 0, current_time = 0, waiting_time = 0, turnaround_time = 0;
+
+    // Copy burst times to remaining time
+    for (int i = 0; i < n; i++) {
+        remaining_time[i] = processes[i].burst_time;
+    }
+
+    while (completed < n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= current_time && remaining_time[i] > 0) {
+                if (remaining_time[i] > quantum) {
+                    current_time += quantum;
+                    remaining_time[i] -= quantum;
+                } else {
+                    current_time += remaining_time[i];
+                    waiting_time += current_time - processes[i].burst_time - processes[i].arrival_time;
+                    turnaround_time += current_time - processes[i].arrival_time;
+                    remaining_time[i] = 0;
+                    completed++;
+                }
+            }
+        }
+    }
+
+    printf("Round Robin Results (Quantum = %d):\n", quantum);
+    printf("Average Waiting Time: %.2f\n", (float)waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)turnaround_time / n);
+}
+
+int main() {
+    Process processes[MAX_PROCESSES];
+    int n, quantum;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    // Input process details
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1;
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &processes[i].arrival_time, &processes[i].burst_time);
+        processes[i].remaining_time = processes[i].burst_time; // Initialize remaining time
+    }
+
+    // SJF Preemptive
+    sjf_preemptive(processes, n);
+
+    // Input quantum for Round Robin
+    printf("Enter time quantum for Round Robin: ");
+    scanf("%d", &quantum);
+    
+    // Reset remaining time for Round Robin
+    for (int i = 0; i < n; i++) {
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    // Round Robin
+    round_robin(processes, n, quantum);
+
+    return 0;
+}
+
+
+
+
+
+
+
+//gcc -o pract3 pract3.c
+//./pract3
+
+//no. process= 3
+// P1= 0 8
+//P2= 1 4
+//p3= 2 9
+//SJF result:
+
+//RR process : 3
+
+
+
+
+
+
+
+
+
+
