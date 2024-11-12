@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#define MAX_LINE 1024
+#define FILE_NAME "output.txt"
+
+void process_text(const char *text, int fd_out) {
+    int num_chars = 0, num_words = 0, num_lines = 0;
+    int in_word = 0;
+    char c;
+
+    // Count characters, words, and lines
+    for (int i = 0; text[i] != '\0'; i++) {
+        c = text[i];
+        num_chars++;
+
+        if (c == '\n') {
+            num_lines++;
+        }
+
+        if ((c == ' ' || c == '\t' || c == '\n') && in_word) {
+            num_words++;
+            in_word = 0;
+        } else if (c != ' ' && c != '\t' && c != '\n') {
+            in_word = 1;
+        }
+    }
+
+    if (in_word) {
+        num_words++;
+    }
+
+    // Write results to output file
+    FILE *file = fopen(FILE_NAME, "w");
+    if (file == NULL) {
+        perror("Failed to open file");
+        exit(1);
+    }
+    fprintf(file, "Characters: %d\nWords: %d\nLines: %d\n", num_chars, num_words, num_lines);
+    fclose(file);
+
+    // Send the file content back through pipe
+    file = fopen(FILE_NAME, "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        exit(1);
+    }
+
+    char buffer[MAX_LINE];
+    while (fgets(buffer, sizeof(buffer), file)) {
+        write(fd_out, buffer, strlen(buffer));
+    }
+    fclose(file);
+}
+
+int main() {
+    int pipe1[2], pipe2[2];
+    pid_t pid;
+
+    if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+        perror("Pipe failed");
+        exit(1);
+    }
+
+    pid = fork();
+    if (pid == -1) {
+        perror("Fork failed");
+        exit(1);
+    }
+
+    if (pid > 0) {
+        // Parent Process (Process 1) - Sender
+        close(pipe1[0]); // Close read end of pipe1
+        close(pipe2[1]); // Close write end of pipe2
+
+        char input[MAX_LINE];
+        printf("Enter sentences (Ctrl+D to end):\n");
+
+        while (fgets(input, sizeof(input), stdin)) {
+            write(pipe1[1], input, strlen(input)); // Send sentence to Process 2
+        }
+
+        // Close pipe1 write end after sending input
+        close(pipe1[1]);
+
+        // Read the results from pipe2
+        char buffer[MAX_LINE];
+        while (read(pipe2[0], buffer, sizeof(buffer)) > 0) {
+            printf("%s", buffer);
+        }
+
+        close(pipe2[0]); // Close read end of pipe2
+    } else {
+        // Child Process (Process 2) - Receiver and Processor
+        close(pipe1[1]); // Close write end of pipe1
+        close(pipe2[0]); // Close read end of pipe2
+
+        char buffer[MAX_LINE];
+        while (read(pipe1[0], buffer, sizeof(buffer)) > 0) {
+            process_text(buffer, pipe2[1]); // Process the input and send results to pipe2
+        }
+
+        // Close pipe1 read end after finishing reading
+        close(pipe1[0]);
+        close(pipe2[1]); // Close write end of pipe2 after sending results
+        exit(0);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+//fifo and fifo operations  and fifo for inter-communication//
+
+//reader-writer program//
+
+// gcc -o pract7a pract7a.c
+//./pract7a
+
+//Enter the sentence= hello world
+//o/p
