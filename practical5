@@ -104,7 +104,8 @@ int main() {
 
 
 
-
+//Bankers algorithm //
+//n&m concept 
 
 //gcc pract5.c -o pract5
 //./pract5
