@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define MAX_READERS 5
+#define MAX_WRITERS 2
+#define NUM_READS 3
+#define NUM_WRITES 2
+
+pthread_mutex_t mutex;  // Mutex for synchronizing access to the shared resource
+pthread_mutex_t read_count_mutex;  // Mutex for synchronizing read count
+int read_count = 0;  // Number of readers currently reading
+int shared_resource = 0;  // Shared resource
+
+void* reader(void* arg) {
+    int id = *(int*)arg;
+
+    for (int i = 0; i < NUM_READS; i++) {
+        pthread_mutex_lock(&read_count_mutex);
+        read_count++;
+        if (read_count == 1) {
+            pthread_mutex_lock(&mutex);  // First reader locks the resource
+        }
+        pthread_mutex_unlock(&read_count_mutex);
+
+        // Reading section
+        printf("Reader %d is reading: %d\n", id, shared_resource);
+        sleep(1); // Simulate reading time
+
+        pthread_mutex_lock(&read_count_mutex);
+        read_count--;
+        if (read_count == 0) {
+            pthread_mutex_unlock(&mutex);  // Last reader releases the resource
+        }
+        pthread_mutex_unlock(&read_count_mutex);
+
+        sleep(rand() % 2); // Random delay before next read
+    }
+    return NULL;
+}
+
+void* writer(void* arg) {
+    int id = *(int*)arg;
+
+    for (int i = 0; i < NUM_WRITES; i++) {
+        pthread_mutex_lock(&mutex);  // Writer locks the resource
+
+        // Writing section
+        shared_resource += 1;  // Update shared resource
+        printf("Writer %d is writing: %d\n", id, shared_resource);
+        sleep(2); // Simulate writing time
+
+        pthread_mutex_unlock(&mutex);  // Writer releases the resource
+        sleep(rand() % 3); // Random delay before next write
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t readers[MAX_READERS], writers[MAX_WRITERS];
+    int reader_ids[MAX_READERS], writer_ids[MAX_WRITERS];
+
+    // Initialize mutexes
+    pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&read_count_mutex, NULL);
+
+    // Create reader threads
+    for (int i = 0; i < MAX_READERS; i++) {
+        reader_ids[i] = i + 1; // Assign IDs to readers
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+
+    // Create writer threads
+    for (int i = 0; i < MAX_WRITERS; i++) {
+        writer_ids[i] = i + 1; // Assign IDs to writers
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+
+    // Wait for reader threads to finish
+    for (int i = 0; i < MAX_READERS; i++) {
+        pthread_join(readers[i], NULL);
+    }
+
+    // Wait for writer threads to finish
+    for (int i = 0; i < MAX_WRITERS; i++) {
+        pthread_join(writers[i], NULL);
+    }
+
+    // Clean up
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&read_count_mutex);
+
+    return 0;
+    }
+    
+    
+    
+    
+    //reader-writer///
+
+    //thread synchronizatio and mutual exclusion //
+    
+    //gcc -o pract4b pract4b.c -lpthread
+    //./pract4b
+
+    // o/p:
+    // reader 1 is reading 0 //
