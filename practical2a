@@ -89,6 +89,7 @@ int main() {
 
 
 
+///processcontrol///
 
 //gcc -o pract2a pract2a.c
 //./pract2a
