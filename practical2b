@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define MAX_NUMBERS 100
+
+void bubble_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int numbers[MAX_NUMBERS];
+    int n;
+
+    // Input the number of integers to be sorted
+    printf("Enter number of integers to sort: ");
+    scanf("%d", &n);
+
+    // Input the integers
+    printf("Enter %d integers:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &numbers[i]);
+    }
+
+    // Sort the array
+    bubble_sort(numbers, n);
+
+    // Fork a new process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) { // Child process
+        // Prepare arguments for execve
+        char *args[n + 2]; // +2 for program name and NULL
+        args[0] = "./pract2b2"; // Path to the child program (assuming it's compiled and available)
+
+        for (int i = 0; i < n; i++) {
+            // Convert integers to strings
+            args[i + 1] = malloc(12); // Enough space for integers
+            sprintf(args[i + 1], "%d", numbers[i]);
+        }
+
+        args[n + 1] = NULL; // NULL-terminate the argument list
+
+        // Execute the child program
+        execve(args[0], args, NULL);
+
+        // Free allocated memory (will not be reached if execve is successful)
+        for (int i = 1; i <= n; i++) {
+            free(args[i]);
+        }
+
+        perror("Execve failed");
+        exit(EXIT_FAILURE);
+    } else { // Parent process
+        // Wait for child process to finish
+        wait(NULL);
+        printf("Parent process finished.\n");
+    }
+
+    return 0;
+}
+
+
+
+
+//parent-program//
+
+// path child program
+// args[0] = "./pract2b2";(name of child file)
+
+//gcc -o pract2b pract2b.c
+//gcc -o pract2b2 pract2b2.c
+//./pract2b.c
+
+//no og integer=5
+//enter the no.
+//2 3 4 5 1
+
+//O/p
+//5 4 3 2 1 
+
