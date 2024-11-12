@@ -126,7 +126,13 @@ int main() {
 
 
 
+//cpu scheduling//
 
+
+//FCFS//
+//SJF (Preemptive & non preemptive)
+//round-robin //
+//priority scheduling (preemptive)//
 
 //gcc -o pract3 pract3.c
 //./pract3
@@ -137,7 +143,7 @@ int main() {
 //p3= 2 9
 //SJF result:
 
-//RR process : 3
+//RR process : 3//
 
 
 
